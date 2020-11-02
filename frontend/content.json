@@ -1,0 +1,25 @@
+[{
+	"title": "Introducing AWS X-Ray new integration with AWS Step Functions | AWS Compute Blog",
+	"intro": "AWS Step Functions now integrates with AWS X-Ray to provide a comprehensive tracing experience for serverless orchestration workflows. Step Functions allows you to build resilient serverless orchestration workflows with AWS services such as AWS Lambda, Amazon SNS, Amazon DynamoDB, and more. Step Functions provides a history of executions for a given state machine in the AWS […]",
+	"author": "Benjamin Smith",
+	"date": "Sep 14, 2020",
+	"link": "https://aws.amazon.com/blogs/compute/introducing-aws-x-ray-new-integration-with-aws-step-functions/",
+	"image": "https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2020/08/28/1-serviceMap-967x630.png",
+	"tags": [
+		"Application Services",
+		"AWS Step Functions",
+		"AWS X-Ray",
+		"Developer Tools",
+		"Serverless",
+		"AWS Lambda",
+		"serverless"
+	]
+},{
+	"title": "The serverless LAMP stack part 6: From MVC to serverless microservices",
+	"intro": "In this post, you learn how to build serverless PHP applications using microservices. I show how to move from using a single Lambda function as scalable web host with an MVC framework, to a decoupled microservice model. The accompanying code examples for this blog post can be found in this GitHub repository.[…]",
+	"author": "Benjamin Smith",
+	"date": "Oct 6, 2020",
+	"link": "https://aws.amazon.com/blogs/compute/the-serverless-lamp-stack-part-6-from-mvc-to-serverless-microservices/",
+	"image": "https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2020/10/02/Screenshot-2020-10-01-at-11.25.55.png",
+  "tags": ["Interactive workloads","PHP", "LAMP", "Amazon API Gateway", "Amazon API Gateway", "Amazon Aurora", "Amazon RDS", "AWS Lambda", "AWS PHP Development", "AWS SDK for PHP", "Developer Tools", "DevOps", "Programing Language", "RDS for MySQL"]
+}]

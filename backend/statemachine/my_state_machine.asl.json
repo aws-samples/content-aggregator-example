@@ -1,0 +1,85 @@
+{
+    "Comment": "Content aggregation Workflow",
+    "StartAt": "getnewBlogs",
+    "States": {
+        "getnewBlogs": {
+            "Type": "Task",
+            "Resource": "${GetUrlsArn}",
+            "Next": "Get Repo Contents",
+            "ResultPath": "$.RSSBlogs"
+        },
+        "Get Repo Contents": {
+            "Type": "Task",
+            "Resource":"${GetRepoContentsArn}",                 
+            "Next": "forEachBlog",
+            "ResultPath": "$.RepoBlogs"
+        },
+
+        "forEachBlog":{
+            "Type":"Map",
+            "InputPath": "$",
+            "ItemsPath": "$.RSSBlogs.body",
+            "ResultPath": "$.mapResults",
+            "Parameters": {
+                "BlogUrl.$": "$$.Map.Item.Value",
+                "RepoBlogs.$": "$.RepoBlogs"
+            },
+           
+            "MaxConcurrency": 0,
+            "Iterator": {
+              "StartAt": "getMeta",
+              "States": {
+                "getMeta": {
+                    "Type": "Task",
+                    "InputPath" : "$.BlogUrl",
+                    "ResultPath" : "$.BlogMeta",
+                    "Resource": "${GetBlogPostArn}",
+                    "Next": "Compare Against Repo"
+                },
+                "Compare Against Repo": {
+                    "Type": "Task",
+                    "Resource":"${CompareAgainstRepoArn}",
+                    "ResultPath" : "$.decision",                 
+                    "Next": "Decide if Exist ?"
+                },
+
+                "Decide if Exist ?": {
+                    "Type": "Choice",
+                    "Choices": [
+                        {
+                            "Variable": "$.decision.exist",
+                            "NumericEquals": 0,
+                            "Next": "Add To List"
+                        },
+                        {
+                            "Variable": "$.decision.exist",
+                            "NumericEquals": 1,
+                            "Next": "Ignore"
+                        }
+                    ],
+                    "Default": "Ignore"
+                },
+
+                "Add To List": {
+                    "Type": "Task",
+                    "Resource":"${AddToListArn}",                
+                    "End": true
+                },
+
+                "Ignore": {
+                    "Type": "Succeed"
+                }
+
+              }
+            },
+            "Next": "SaveToGitHub"
+        },
+
+        "SaveToGitHub": {
+            "Type": "Task",
+            "Resource":"${WriteToGitHubArn}",                 
+            "End": true
+        }
+    }
+  }
+  

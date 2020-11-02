@@ -1,0 +1,237 @@
+
+# SPDX-FileCopyrightText: 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0 
+
+
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  serverlessLandBlogUpdator
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+Parameters:
+  RSSFeed:
+    Type: String
+    Description: 'RSS feed to scan'
+    Default: 'https://aws.amazon.com/blogs/compute/feed'
+
+  GitHubRepo:
+    Type: String
+    Description: Full URL of the GitHub Repository that holds your application eg. https://github.com/username/repo-name\
+    Default: ''
+
+  JSONFile:
+    Type: String
+    Description: JSON file that holds blog content eg. content.json
+    Default: '/frontend/content.json'
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: !Sub states.${AWS::Region}.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: lambda
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource:
+              - !GetAtt GetBlogPost.Arn
+              - !GetAtt GetUrls.Arn
+              - !GetAtt CompareAgainstRepo.Arn
+              - !GetAtt WriteToGitHub.Arn
+              - !GetAtt AddToList.Arn
+              - !GetAtt GetRepoContents.Arn
+  SSMAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        -
+          PolicyName: 'ParameterStoreAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'ssm:GetParameter*'
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/GitHubAPIKey'
+
+  MyStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/my_state_machine.asl.json
+      DefinitionSubstitutions:
+        GetBlogPostArn: !GetAtt GetBlogPost.Arn
+        GetUrlsArn: !GetAtt GetUrls.Arn
+        WriteToGitHubArn: !GetAtt WriteToGitHub.Arn
+        CompareAgainstRepoArn: !GetAtt CompareAgainstRepo.Arn
+        GetRepoContentsArn: !GetAtt GetRepoContents.Arn
+        AddToListArn: !GetAtt AddToList.Arn
+      Role: !GetAtt StateMachineRole.Arn
+
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  
+  #MyStateMachine:
+  #  Properties:
+  #  Type: AWS::Serverless::StateMachine
+  #    DefinitionUri: statemachine/my_state_machine.asl.json
+
+  # This is a Lambda function config associated with the source code: hello-from-lambda.js
+  GetBlogPost:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/scrape-blog/
+      Handler: GetBlogPost.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Policies:
+        # Give Lambda basic execution Permission to the helloFromLambda
+        - AWSLambdaBasicExecutionRole
+  GetUrls:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/urls/
+      Handler: GetUrls.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Policies:
+        # Give Lambda basic execution Permission to the helloFromLambda
+        - AWSLambdaBasicExecutionRole
+
+  CompareAgainstRepo:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          GitHubRepo: !Ref GitHubRepo
+          JSONFile: !Ref JSONFile
+      CodeUri: src/compare-against-repo/
+      Handler: CompareAgainstRepo.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that Gets File Contents from Github and checks if payload item exists already.
+      Role: !GetAtt SSMAccessRole.Arn
+
+  GetRepoContents:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          GitHubRepo: !Ref GitHubRepo
+          JSONFile: !Ref JSONFile
+      CodeUri: src/get-repo-contents/
+      Handler: GetRepoContents.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that Gets File Contents from Github and checks if payload item exists already.
+      Role: !GetAtt SSMAccessRole.Arn
+      
+  AddToList:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/add-to-list/
+      Handler: addToList.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Policies:
+        # Give Lambda basic execution Permission to the helloFromLambda
+        - AWSLambdaBasicExecutionRole
+  
+  
+  WriteToGitHub:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          GitHubRepo: !Ref GitHubRepo
+          JSONFile: !Ref JSONFile
+      CodeUri: src/update-github/
+      Handler: WriteToGitHub.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Role: !GetAtt SSMAccessRole.Arn
+
+  ScheduledEventIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                  - Fn::Sub: "events.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        -
+          PolicyName: StateMachineExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "states:StartExecution"
+                Resource:
+                  - !Ref MyStateMachine
+
+  ScheduledEventRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Description: "Scheduled event to trigger Step Functions state machine"
+      ScheduleExpression: rate(2 hours)
+      State: "ENABLED"
+      Targets:
+        -
+          Arn: !Ref MyStateMachine
+          Id: !GetAtt MyStateMachine.Name
+          RoleArn: !GetAtt ScheduledEventIAMRole.Arn
+          Input: !Sub
+            - >
+              {
+                "feedUrl" : "${RssFeedUrl}"
+              }
+            - RssFeedUrl: !Ref RSSFeed
