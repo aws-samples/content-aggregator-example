@@ -14,7 +14,7 @@ Part 2: The backend, am automaed content aggregation workflow.
 
 
 
-![backend](/resources/frontend.png)
+![backend](/resources/backend.png)
 
 
 **Part 2: An auto-building static site** (the front-end site)
@@ -23,7 +23,7 @@ Part 2: The backend, am automaed content aggregation workflow.
 
 This is a static website that automatically aggregates content from a number of RSS feeds. The content exists in static JSON files, which generate a new site build each time they are updated. The result is a low-maintenance, low-latency serverless website, with almost limitless scalability.
 
-![backend](/resources/backend.png)
+![frontend](/resources/frontend.png)
 
 
 
