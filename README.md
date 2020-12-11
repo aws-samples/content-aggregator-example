@@ -18,7 +18,7 @@ Part 2: The backend, am automaed content aggregation workflow.
 
 
 **Part 2: An auto-building static site** (the front-end site)
-### [Code](/frontend) 
+### [Code](/frontend) | [Blog](https://aws.amazon.com/blogs/compute/building-serverless-land-part-2-an-auto-building-static-site/) 
 
 
 This is a static website that automatically aggregates content from a number of RSS feeds. The content exists in static JSON files, which generate a new site build each time they are updated. The result is a low-maintenance, low-latency serverless website, with almost limitless scalability.
