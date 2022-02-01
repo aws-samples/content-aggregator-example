@@ -1,12 +1,12 @@
 # Building Serverless Land
 
-[Serverless Land](https://serverlessland.com) brings together all the latest blogs, videos, and training for AWS Serverless. 
-![ServelressLand](/resources/slandpipeline.png)
+[Serverlessland](https://serverlessland.com) brings together all the latest blogs, videos, and training for AWS Serverless. 
+![Serverlessland](/resources/slandpipeline.png)
 
 
-This repository contains all the example code to help you build a content aggregator like serverless land. It is split into 2 components:
-Part 1: The front-end, an auto-building static website.
-Part 2: The backend, am automaed content aggregation workflow.
+This repository contains all the example code to help you build a content aggregator like Serverlessland. It is split into 2 components:
+Part 1: The frontend, an auto-building static website.
+Part 2: The backend, an automated content aggregation workflow.
 
 
 **Part 1: Automated content aggregation** (the backend application):
